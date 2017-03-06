@@ -22,14 +22,6 @@ class AELR(regression_mixin.RegressionMixin):
         self.z_p = [1.0 for i in range(self.w_dim)]
         self.z_n = [1.0 for i in range(self.w_dim)]
 
-    @property
-    def avg_w(self):
-        avg = [.0 for i in range(self.w_dim)]
-        for w in self.ws:
-            avg = map(lambda x, y: x+y,
-                           avg, w)
-        avg = [w/len(self.ws) for w in avg]
-        return avg
 
     def train(self, fs, ls):
         for index, f in enumerate(fs):
@@ -53,7 +45,7 @@ class AELR(regression_mixin.RegressionMixin):
                 w_index = utils.sample_with_percents(percents)
             sign = 1.0 if w[w_index] > 0 else -1.0
             l = ls[index]
-            direction = norm1_w * sign * X[w_index] -l
+            direction = norm1_w * sign * f[w_index] -l
             g = map(lambda x: x*direction, X)
             for i in range(self.w_dim):
                 g[i] = max(min(g[i], 1/self.lr), -self.lr)

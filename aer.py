@@ -17,8 +17,8 @@ class AER(regression_mixin.RegressionMixin):
         self.k = k
         self.w_dim = w_dim
         self.w = [0.0 for i in range(self.w_dim)]
+        self.ws = [self.w]
         self._learning_rate = learning_rate
-        self.avg_w = [0.0 for i in range(self.w_dim)]
         self.w_inited = False
         self.B = B
         self.indexs = [i for i in range(self.w_dim)]
@@ -58,6 +58,5 @@ class AER(regression_mixin.RegressionMixin):
                     v)
             w = map(lambda x, y: x-y, w, v)
             # find argmin
-            self.w = w
-            self.avg_w += map(lambda x: x/len(features),
-                              self.w)
+            self.ws.append(w)
+            self.w = self.ws[-1]

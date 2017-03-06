@@ -16,7 +16,7 @@ class AERR(regression_mixin.RegressionMixin):
         self.k = k
         self.w_dim = w_dim
         self.w = [0.1*random.random() for i in range(self.w_dim)]
-        self.avg_w =[i for i in self.w]
+        self.ws = [self.w]
         self.lr = learning_rate
         self.indexs = [i for i in range(self.w_dim)]
         self.B = B
@@ -39,14 +39,13 @@ class AERR(regression_mixin.RegressionMixin):
             v_norm = utils.norm2(v)
             if v_norm > self.B:
                 self.w = [i/v_norm for i in v]
-            self.avg_w = map(lambda x, y: (x*index+y)/(index+1),
-                             self.avg_w, self.w)
-
+            self.ws.append(self.w)
+            self.w = self.ws[-1]
 
 
 if __name__ == '__main__':
     fs, ls = mnist_data.get_3_5()
-    r = AERR(500, len(fs[0]), 500, 0.3)
+    r = AERR(50, len(fs[0]), 50, 0.3)
     r.train(fs, ls)
     print r.avg_w
     
