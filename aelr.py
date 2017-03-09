@@ -27,7 +27,7 @@ class AELR(regression_mixin.RegressionMixin):
         for index, f in enumerate(fs):
             w = map(lambda x, y: x-y, self.z_p, self.z_n)
             w = map(lambda x: x*self.B, w)
-            divider = utils.norm1(w)
+            divider = utils.norm1(self.z_p) + utils.norm1(self.z_n)
             if divider != 0:
                 w = map(lambda x: x/divider, w)
             self.ws.append(w)
@@ -38,7 +38,7 @@ class AELR(regression_mixin.RegressionMixin):
                 X[x_index] += self.w_dim * f[x_index]
             X = [x/self.k for x in X]
             norm1_w = utils.norm1(w)
-            if divider == 0:
+            if norm1_w == 0:
                 w_index = random.choice(indexs)
             else:
                 percents = [abs(w_i)/norm1_w for w_i in w]

@@ -14,7 +14,6 @@ def sample_with_percents(percents):
     flag = random.random()
     while True:
         r = r + percents[index]
-        if r > flag:
+        if r >= flag:
             return index
         index += 1
-
