@@ -1,4 +1,7 @@
+from __future__ import division
 import random
+from sklearn.linear_model import Ridge
+import mnist_data
 
 
 def split(fs, ls, k):
@@ -16,11 +19,11 @@ def split(fs, ls, k):
     return results
 
 
-def k_fold(fs, ls, k, regressor, measuments):
-    splits = split(fs, ls, k)
-    pre_results = {}
+def k_fold(fs, ls, k, regressor):
+    results = split(fs, ls, k)
+    mses = []
     for i in range(k):
-        regressor.init()
+        #regressor.re_init()
         train_labels = []
         train_fs = []
         test_labels = results[i][1]
@@ -29,4 +32,25 @@ def k_fold(fs, ls, k, regressor, measuments):
             if j != i:
                 train_labels += results[j][1]
                 train_fs += results[j][0]
+        regressor.train(train_fs, train_labels)
+        #'''
+        ses = map(lambda f, l: (regressor.predict(f)-l)**2,
+                  test_fs, test_labels)
+        mse = sum(ses) / len(ses)
+        '''
+        ac = len(filter(None, map(lambda x, y: x == y,
+                            [regressor.predict_label(f) for f in test_fs],
+                            test_labels)))
+        
+        print ac / len(test_fs)
+        '''
+        print mse
+        mses.append(mse)
+        #'''
+    return mses
+
+if __name__ == "__main__":
+    fs, ls = mnist_data.get_3_5()
+    r = Ridge()
+
 

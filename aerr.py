@@ -45,7 +45,7 @@ class AERR(regression_mixin.RegressionMixin):
 
 if __name__ == '__main__':
     fs, ls = mnist_data.get_3_5()
-    r = AERR(50, len(fs[0]), 50, 0.3)
+    r = AERR(4, len(fs[0]), 20, 0.3)
     r.train(fs, ls)
     print r.avg_w
     
