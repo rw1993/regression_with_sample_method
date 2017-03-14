@@ -5,6 +5,7 @@ import mnist_data
 
 
 def split(fs, ls, k):
+    assert len(fs) == len(ls)
     fs_ls = zip(fs, ls)
     random.shuffle(fs_ls)
     fs = [i[0] for i in fs_ls]
@@ -33,7 +34,7 @@ def k_fold(fs, ls, k, regressor):
                 train_labels += results[j][1]
                 train_fs += results[j][0]
         regressor.train(train_fs, train_labels)
-        #'''
+        '''
         ses = map(lambda f, l: (regressor.predict(f)-l)**2,
                   test_fs, test_labels)
         mse = sum(ses) / len(ses)
@@ -46,11 +47,9 @@ def k_fold(fs, ls, k, regressor):
         '''
         print mse
         mses.append(mse)
-        #'''
+        '''
     return mses
 
 if __name__ == "__main__":
     fs, ls = mnist_data.get_3_5()
     r = Ridge()
-
-

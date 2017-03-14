@@ -14,7 +14,7 @@ class myRidge(regression_mixin.RegressionMixin):
         self.r = Ridge()
 
     def re_init(self):
-        self.r = Ridge()
+        self.r = Ridge(alpha=0.45)
 
     def predict(self, X):
         return self.r.predict([X])[0]
