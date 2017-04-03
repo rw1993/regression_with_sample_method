@@ -4,18 +4,7 @@ import k_fold
 import projection
 import math
 import itertoolsmodule
-
-def one_or_one(func):
-
-    def _f(*args, **kw):
-        r = func(*args, **kw)
-        if r > 1.0:
-            return 1.0
-        if r < -1.0:
-            return -1.0
-        else:
-            return r
-    return _f
+from utils import one_or_one
 
 
 class AERR(object):
@@ -24,7 +13,8 @@ class AERR(object):
         self.k = k
         self.B = B
         self.lr = lr
-   
+  
+    @one_or_one
     def predict(self, X):
         return self.avg_w.dot(X)
 
@@ -38,11 +28,12 @@ class AERR(object):
     def train(self, fs, ls):
         B = self.B
         d = len(fs[0])
-        w = 0.0001 * numpy.random.random(d)
+        w = 0.000001 * numpy.random.random(d)
+        assert numpy.linalg.norm(w, 2) < B
         ws = [w]
         k = self.k
         m = len(fs)
-        self.lr = (k/2.0*d*m) ** 0.5
+        self.lr = (float(k)/(2.0*d*m)) ** 0.5
         self.indexs = [i for i in range(d)]
         for index, x in enumerate(fs):
             y = ls[index]
@@ -55,7 +46,7 @@ class AERR(object):
             w_norm = numpy.linalg.norm(w, 2) ** 2
             percents = w * w / w_norm
             w_index = numpy.random.choice(self.indexs, p=percents)
-            phi = w_norm * x[w_index]/ w[w_index] - y
+            phi = w_norm * x[w_index] / w[w_index] - y
             g = phi * x_t
             v = w - self.lr * g
             new_w = v * B / max(B, numpy.linalg.norm(v, 2))
@@ -63,7 +54,17 @@ class AERR(object):
         self.avg_w = sum(ws) / m
 
 
+
 if __name__ == '__main__':
     fs, ls = mnist_data.get_3_5()
-    r = AERR(56, 0.45, 0)
-    k_fold.k_fold(fs, ls, 10, r)
+    Bs = [2**i for i in range(-15, 16)] 
+    lrs = [2**i for i in range(-15, 16)] 
+    best = (0, 0, 0)
+    #aer 0.80, 2 128
+    for B in Bs:
+        for lr in lrs:
+            r = AERR(57, B, lr)
+            ac = k_fold.k_fold(fs, ls, 10, r)
+            best = (ac, B, lr) if best < (ac, B, lr) else best
+            print best
+

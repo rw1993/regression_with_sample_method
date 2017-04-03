@@ -23,6 +23,7 @@ def split(fs, ls, k):
 def k_fold(fs, ls, k, regressor):
     results = split(fs, ls, k)
     mses = []
+    acs = []
     for i in range(k):
         #regressor.re_init()
         train_labels = []
@@ -43,11 +44,13 @@ def k_fold(fs, ls, k, regressor):
                             [regressor.predict_label(f) for f in test_fs],
                             test_labels)))
         
-        print ac / len(test_fs)
+        #print ac / len(test_fs)
+        acs.append(ac / len(test_fs))
         '''
         print mse
         mses.append(mse)
-        '''
+        #'''
+    return sum(acs) / len(acs)
     return mses
 
 if __name__ == "__main__":

@@ -4,18 +4,7 @@ import k_fold
 import projection
 import math
 import itertoolsmodule
-
-def one_or_one(func):
-
-    def _f(*args, **kw):
-        r = func(*args, **kw)
-        if r > 1.0:
-            return 1.0
-        if r < -1.0:
-            return -1.0
-        else:
-            return r
-    return _f
+from utils import one_or_one
 
 
 class AER(object):
@@ -43,7 +32,7 @@ class AER(object):
         avg_w = numpy.zeros(d)
         k = self.k
         m = len(fs)
-        self.lr = (B+1.0)*d/B*(math.log(m)/(m*k))**0.5
+        #self.lr = (B+1.0)*d/B*(math.log(m)/(m*k))**0.5
         self.indexs = [i for i in range(d)]
         for index, x in enumerate(fs):
             y = ls[index]
@@ -70,7 +59,14 @@ class AER(object):
         self.arg_w = avg_w
 
 if __name__ == '__main__':
-
     fs, ls = mnist_data.get_3_5()
-    r = AER(4, 0.70, 10)
-    k_fold.k_fold(fs, ls, 10, r)
+    Bs = [2**i for i in range(-15, 16)] 
+    lrs = [2**i for i in range(-15, 16)] 
+    best = (0, 0, 0)
+    #aer 0.80, 2 128
+    for B in Bs:
+        for lr in lrs:
+            r = AER(4, B, lr)
+            ac = k_fold.k_fold(fs, ls, 10, r)
+            best = (ac, B, lr) if best < (ac, B, lr) else best
+            print best

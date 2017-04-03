@@ -1,0 +1,28 @@
+import numpy as np
+import random
+import utils
+import math
+import regression_mixin
+import mnist_data
+import k_fold
+from sklearn.linear_model import Lasso
+
+
+class myLasso(regression_mixin.RegressionMixin):
+
+    def __init__(self):
+        self.r = Lasso(0.05)
+
+    def re_init(self):
+        self.r = Lasso(0.05)
+
+    def predict(self, X):
+        return self.r.predict([X])[0]
+
+    def train(self, features, labels):
+        self.r.fit(features, labels)
+
+if __name__ == '__main__':
+    fs, ls = mnist_data.get_3_5()
+    r = myLasso()
+    k_fold.k_fold(fs, ls, 10, r)

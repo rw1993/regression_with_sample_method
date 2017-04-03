@@ -41,7 +41,7 @@ class AELR(object):
         ws = []
         k = self.k
         m = len(fs)
-        self.lr = 1.0 / 4 / B **2 * (2.0*k*numpy.log2(2*d))**0.5
+        #self.lr = 1.0 / 4 / B **2 * (2.0*k*numpy.log2(2*d))**0.5
         self.indexs = [i for i in range(d)]
         z_p = numpy.ones(d)
         z_n = numpy.ones(d)
@@ -72,5 +72,14 @@ class AELR(object):
 
 if __name__ == '__main__':
     fs, ls = mnist_data.get_3_5()
-    r = AELR(4, 0.2, 0)
-    k_fold.k_fold(fs, ls, 10, r)
+    Bs = [2**i for i in range(-15, 16)] 
+    lrs = [2**i for i in range(-15, 16)] 
+    best = (0, 0, 0)
+    #aer 0.80, 2 128
+    #aelr 0.84, 2 0.5
+    for B in Bs:
+        for lr in lrs:
+            r = AELR(4, B, lr)
+            ac = k_fold.k_fold(fs, ls, 10, r)
+            best = (ac, B, lr) if best < (ac, B, lr) else best
+            print best
