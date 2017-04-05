@@ -2,7 +2,7 @@
 from mnist import MNIST
 
 
-mndata = MNIST("/home/rw/codeplace/regression/mnist")
+mndata = MNIST("/home/rw/codeplace/regression_with_sample_method/mnist")
 data = mndata.load_training()
 labels = data[1]
 features = data[0]

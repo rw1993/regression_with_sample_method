@@ -3,7 +3,7 @@ import mnist_data
 import k_fold
 import projection
 import math
-import itertoolsmodule
+#import itertoolsmodule
 
 def one_or_one(func):
 
@@ -41,7 +41,6 @@ class AELR(object):
         ws = []
         k = self.k
         m = len(fs)
-        #self.lr = 1.0 / 4 / B **2 * (2.0*k*numpy.log2(2*d))**0.5
         self.indexs = [i for i in range(d)]
         z_p = numpy.ones(d)
         z_n = numpy.ones(d)
@@ -53,7 +52,7 @@ class AELR(object):
            x_t = numpy.zeros(d)
            for r in range(k):
                x_index = numpy.random.choice(self.indexs)
-               x_t[x_index] += x[x_index]
+               x_t[x_index] += d * x[x_index]
            x_t = x_t / k
            w_norm = numpy.linalg.norm(w, 1)
            if w_norm == 0:
@@ -75,8 +74,6 @@ if __name__ == '__main__':
     Bs = [2**i for i in range(-15, 16)] 
     lrs = [2**i for i in range(-15, 16)] 
     best = (0, 0, 0)
-    #aer 0.80, 2 128
-    #aelr 0.84, 2 0.5
     for B in Bs:
         for lr in lrs:
             r = AELR(4, B, lr)

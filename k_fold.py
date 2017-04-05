@@ -51,7 +51,7 @@ def k_fold(fs, ls, k, regressor):
         mses.append(mse)
         #'''
     return sum(acs) / len(acs)
-    return mses
+    return sum(mses) / len(mses)
 
 if __name__ == "__main__":
     fs, ls = mnist_data.get_3_5()
