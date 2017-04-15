@@ -4,6 +4,7 @@ import projection
 import math
 from utils import one_or_one
 import arma
+from sklearn.linear_model import LinearRegression as LR
 
 
 class AERR(object):
@@ -101,6 +102,35 @@ if __name__ == '__main__':
     # B=4, lr=2**-4 missing = 0.2 0.0925
     # aerr 
     # B=1 lr=0.0625
+    for mr in [0.0, 0.1, 0.2, 0.3]:
+        mse = []
+        for i in range(20):
+            train_fs, train_ls, test_fs, test_ls, train_time_series = prepare_ar(10000, mr)
+            #r = AERR(5, 1, 0.0625, mr)
+            r = AERR(2, 1, 0.0625, mr)
+            r.train(train_fs, train_ls)
+            Xs = []
+            Ys = []
+            for index, observation in  enumerate(train_time_series):
+                X = train_time_series[index-2: index]
+                if len(X) == 2 and '*' not in X:
+                    if observation == '*':
+                        train_time_series[index] = r.predict(X)
+                    Xs.append(X)
+                    Ys.append(train_time_series[index])
+            lrr = LR()
+            lrr.fit(Xs, Ys)
+            errors = []
+            for f, y in zip(test_fs, test_ls):
+                errors.append(lrr.predict([f])[0] - y)
+            mse.append(sum([e*e for e in errors]) / len(test_ls))
+        print mr, sum(mse) / 20
+                
+
+                
+                
+        
+
     '''
     for B in Bs:
         for lr in lrs:
@@ -134,7 +164,6 @@ if __name__ == '__main__':
             mses.append(mse)
         avg_mse = sum(mses) / len(mses)
         print avg_mse
-    '''
     mses = []
     for i in range(20):
         print i
@@ -153,3 +182,4 @@ if __name__ == '__main__':
         mses.append(mse)
     avg_mse = sum(mses) / len(mses)
     print avg_mse
+    '''
