@@ -1,28 +1,20 @@
 import numpy
+import k_fold
+import projection
+import math
+from utils import one_or_one
 import arma
 
 
-def one_or_one(func):
+class AERR(object):
 
-    def _f(*args, **kw):
-        r = func(*args, **kw)
-        if r > 1.0:
-            return 1.0
-        if r < -1.0:
-            return -1.0
-        else:
-            return r
-    return _f
-
-
-class AELR(object):
-
-    def __init__(self, k, B=32, lr=2**-7, mr=0.0):
+    def __init__(self, k, B=1, lr=0.0625, mr=0.0):
         self.k = k
         self.B = B
         self.lr = lr
         self.mr = mr
-
+  
+    #@one_or_one
     def predict(self, X):
         return self.avg_w.dot(X)
 
@@ -32,41 +24,37 @@ class AELR(object):
         else:
             return -1
 
+            
     def train(self, fs, ls):
         B = self.B
         d = len(fs[0])
-        ws = []
+        w = 0.000001 * numpy.random.random(d)
+        assert numpy.linalg.norm(w, 2) < B
+        ws = [w]
         k = self.k
         m = len(fs)
+        self.lr = (float(k)/(2.0*d*m)) ** 0.5
         self.indexs = [i for i in range(d)]
-        z_p = numpy.ones(d)
-        z_n = numpy.ones(d)
         for index, x in enumerate(fs):
             y = ls[index]
             if y == "*":
                 continue
-            # indexs = [index for index, x_ in enumerate(x) if x != "*"]
-            indexs = self.indexs
-            x = [x_ if x_ != '*' else 0.0 for x_ in x]
-            w = (z_p - z_n) * B / (numpy.linalg.norm(z_p, 1) + numpy.linalg.norm(z_n, 1))
-            ws.append(w)
+            indexs = [index for index, x_ in enumerate(x) if x_ != '*']
+            w = ws[-1]
             x_t = numpy.zeros(d)
-            for r in range(k):
+            for i in range(k):
                 x_index = numpy.random.choice(indexs)
-                x_t[x_index] += len(self.indexs) * x[x_index] / (1-self.mr)
+                if x_t[x_index] != '*':
+                    x_t[x_index] += d * x[x_index]
             x_t = x_t / k
-            w_norm = numpy.linalg.norm(w, 1)
-            if w_norm == 0:
-                phi = -y
-            else:
-                ps = abs(w) / w_norm
-                w_index = numpy.random.choice(self.indexs, p=ps)
-                phi = w_norm * numpy.sign(w[w_index]) * x[w_index] / (1-self.mr) - y
+            w_norm = numpy.linalg.norm(w, 2) ** 2
+            percents = w * w / w_norm
+            w_index = numpy.random.choice(self.indexs, p=percents)
+            phi = w_norm * x[w_index] / w[w_index] / (1-self.mr) - y
             g = phi * x_t
-            for i in range(d):
-                g[i] = max(min(g[i], 1.0/self.lr), -1.0/self.lr)
-                z_p[i] *= numpy.exp(-self.lr*g[i])
-                z_n[i] *= numpy.exp(self.lr*g[i])
+            v = w - self.lr * g
+            new_w = v * B / max(B, numpy.linalg.norm(v, 2))
+            ws.append(new_w)
         self.avg_w = sum(ws) / m
 
 
@@ -108,34 +96,39 @@ if __name__ == '__main__':
     best = (99999999, 0, 0)
     Bs = [2**i for i in range(-6, 6)]
     lrs = [2**i for i in range(-9, 9)]
+    # aelr
     # B=32, lr=2**-7 missing = 0.0
     # B=16, lr=2**-7 missing = 0.1 0.0919
     # B=4, lr=2**-4 missing = 0.2 0.0925
+    # aerr 
+    # B=1 lr=0.0625
     '''
     for B in Bs:
         for lr in lrs:
-            try:
-                mses = []
-                for i in range(20):
-                    r = AELR(2, B, lr, mr=0.3)
-                    train_fs, train_ls, test_fs, test_ls = prepare_ar(10000,
-                                                                      0.3)
-                    r.train(train_fs, train_ls)
-                    errors = [r.predict(x)-y for x, y in zip(test_fs, test_ls)]
-                    mse = sum(e*e for e in errors) / len(errors)
-                    mses.append(mse)
-                avg_mse = sum(mses) / len(mses)
-                best = (avg_mse, lr, B) if best[0] > avg_mse else best
-            except Exception, e:
-                print e
-                print B, lr, "failed"
+            #try:
+            print B, lr
+            mses = []
+            for i in range(20):
+                r = AERR(5, B, lr, mr=0.0)
+                train_fs, train_ls, test_fs, test_ls = prepare_ar(10000,
+                                                                  0.0)
+                r.train(train_fs, train_ls)
+                errors = [r.predict(x)-y for x, y in zip(test_fs, test_ls)]
+                mse = sum(e*e for e in errors) / len(errors)
+                mses.append(mse)
+            avg_mse = sum(mses) / len(mses)
+            best = (avg_mse, lr, B) if best[0] > avg_mse else best
+            #except Exception, e:
+            #    print e
+            #    print B, lr, "failed"
             print best
+    '''
     for mr in [0.0, 0.1, 0.2, 0.3]:
         mses = []
         for i in range(20):
-            #r = AELR(5, 32, 2**-7, mr)
-            r = AELR(2, 32, 2**-7, mr)
-            train_fs, train_ls, test_fs, test_ls = prepare_ar(10000,
+            #r = AERR(5, 1, 0.0625, mr)
+            r = AERR(2, 1, 0.0625, mr)
+            train_fs, train_ls, test_fs, test_ls, _ = prepare_ar(10000,
                                                               mr)
             r.train(train_fs, train_ls)
             errors = [r.predict(x)-y for x, y in zip(test_fs, test_ls)]
@@ -154,11 +147,12 @@ if __name__ == '__main__':
        
         mr = sum(map(lambda x: 1.0 if x == '*' else 0.0,
                      train_time_series[:1000])) / 1000
-        #r = AELR(5, 1, 0.0625, mr)
-        r = AELR(2, 1, 0.0625, mr)
+        #r = AERR(5, 1, 0.0625, mr)
+        r = AERR(2, 1, 0.0625, mr)
         r.train(train_fs, train_ls)
         errors = [r.predict(x)-y for x, y in zip(test_fs, test_ls)]
         mse = sum(e*e for e in errors) / len(errors)
         mses.append(mse)
     avg_mse = sum(mses) / len(mses)
     print avg_mse
+    '''

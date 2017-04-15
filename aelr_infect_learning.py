@@ -45,16 +45,17 @@ class AELR(object):
             y = ls[index]
             if y == "*":
                 continue
-            # indexs = [index for index, x_ in enumerate(x) if x != "*"]
-            indexs = self.indexs
+            indexs = [index for index, x_ in enumerate(x) if x != "*"]
             x = [x_ if x_ != '*' else 0.0 for x_ in x]
             w = (z_p - z_n) * B / (numpy.linalg.norm(z_p, 1) + numpy.linalg.norm(z_n, 1))
             ws.append(w)
+            mr = float(len(indexs)) / d
+            k1 = int(k*mr)
             x_t = numpy.zeros(d)
-            for r in range(k):
+            for r in range(k1):
                 x_index = numpy.random.choice(indexs)
-                x_t[x_index] += len(self.indexs) * x[x_index] / (1-self.mr)
-            x_t = x_t / k
+                x_t[x_index] += d * x[x_index]
+            x_t = x_t / k1
             w_norm = numpy.linalg.norm(w, 1)
             if w_norm == 0:
                 phi = -y
@@ -65,8 +66,8 @@ class AELR(object):
             g = phi * x_t
             for i in range(d):
                 g[i] = max(min(g[i], 1.0/self.lr), -1.0/self.lr)
-                z_p[i] *= numpy.exp(-self.lr*g[i])
-                z_n[i] *= numpy.exp(self.lr*g[i])
+                z_p[i] *= numpy.exp(-self.lr*g[i]*mr)
+                z_n[i] *= numpy.exp(self.lr*g[i]*mr)
         self.avg_w = sum(ws) / m
 
 
@@ -130,12 +131,13 @@ if __name__ == '__main__':
                 print e
                 print B, lr, "failed"
             print best
+    '''
     for mr in [0.0, 0.1, 0.2, 0.3]:
         mses = []
         for i in range(20):
             #r = AELR(5, 32, 2**-7, mr)
             r = AELR(2, 32, 2**-7, mr)
-            train_fs, train_ls, test_fs, test_ls = prepare_ar(10000,
+            train_fs, train_ls, test_fs, test_ls, _ = prepare_ar(10000,
                                                               mr)
             r.train(train_fs, train_ls)
             errors = [r.predict(x)-y for x, y in zip(test_fs, test_ls)]
@@ -143,6 +145,7 @@ if __name__ == '__main__':
             mses.append(mse)
         avg_mse = sum(mses) / len(mses)
         print avg_mse
+
     '''
     mses = []
     for i in range(20):
@@ -154,11 +157,12 @@ if __name__ == '__main__':
        
         mr = sum(map(lambda x: 1.0 if x == '*' else 0.0,
                      train_time_series[:1000])) / 1000
-        #r = AELR(5, 1, 0.0625, mr)
-        r = AELR(2, 1, 0.0625, mr)
+        r = AELR(5, 1, 0.0625, mr)
+        #r = AELR(2, 1, 0.0625, mr)
         r.train(train_fs, train_ls)
         errors = [r.predict(x)-y for x, y in zip(test_fs, test_ls)]
         mse = sum(e*e for e in errors) / len(errors)
         mses.append(mse)
     avg_mse = sum(mses) / len(mses)
     print avg_mse
+    '''

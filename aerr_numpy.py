@@ -3,7 +3,6 @@ import mnist_data
 import k_fold
 import projection
 import math
-import itertoolsmodule
 from utils import one_or_one
 
 
